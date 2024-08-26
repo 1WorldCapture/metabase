@@ -1,19 +1,24 @@
 import { useCallback, useMemo } from "react";
 import type { InjectedRouter, Route } from "react-router";
 import { withRouter } from "react-router";
+import { t } from "ttag";
 import _ from "underscore";
 
 import { StrategyForm } from "metabase/admin/performance/components/StrategyForm";
 import { useCacheConfigs } from "metabase/admin/performance/hooks/useCacheConfigs";
 import { useConfirmIfFormIsDirty } from "metabase/admin/performance/hooks/useConfirmIfFormIsDirty";
 import { useSaveStrategy } from "metabase/admin/performance/hooks/useSaveStrategy";
+import {
+  SidesheetSection,
+  SidesheetSubPage,
+} from "metabase/common/components/Sidesheet";
 import { DelayedLoadingAndErrorWrapper } from "metabase/components/LoadingAndErrorWrapper/DelayedLoadingAndErrorWrapper";
 import type { DashboardSidebarPageProps } from "metabase/dashboard/components/DashboardInfoSidebar";
-import { color } from "metabase/lib/colors";
-import { Button, Flex, Icon, Title } from "metabase/ui";
 import type { CacheStrategy, CacheableModel } from "metabase-types/api";
 
 import { DashboardStrategySidebarBody } from "./DashboardStrategySidebar.styled";
+
+// FIXME: don't use SidesheetSection, use SidesheetCard
 
 const configurableModels: CacheableModel[] = ["dashboard"];
 
@@ -22,9 +27,14 @@ const DashboardStrategySidebar_Base = ({
   setPage,
   router,
   route,
+  isOpen,
+  onClose,
 }: DashboardSidebarPageProps & {
   router: InjectedRouter;
   route: Route;
+  // FIXME: I don't know why this prop is needed
+  isOpen: boolean;
+  onClose: () => void;
 }) => {
   if (typeof dashboard.id === "string") {
     throw new Error("This dashboard has an invalid id");
@@ -60,67 +70,51 @@ const DashboardStrategySidebar_Base = ({
     setPage("default");
   }, [setPage]);
 
-  const {
-    askBeforeDiscardingChanges,
-    confirmationModal,
-    isStrategyFormDirty,
-    setIsStrategyFormDirty,
-  } = useConfirmIfFormIsDirty(router, route);
+  const { confirmationModal, setIsStrategyFormDirty, withConfirmation } =
+    useConfirmIfFormIsDirty(router, route);
 
   const goBack = () => setPage("default");
 
   const headingId = "dashboard-sidebar-caching-settings-heading";
 
   return (
-    <DashboardStrategySidebarBody
-      align="flex-start"
-      spacing="md"
-      aria-labelledby={headingId}
+    <SidesheetSubPage
+      isOpen={isOpen}
+      title={t`Caching`}
+      onBack={() => withConfirmation(goBack)}
+      onClose={() => withConfirmation(onClose)}
     >
-      <Flex align="center">
-        <BackButton
-          onClick={() => {
-            isStrategyFormDirty ? askBeforeDiscardingChanges(goBack) : goBack();
-          }}
-        />
-        <Title order={2} id={headingId}>
-          Caching settings
-        </Title>
-      </Flex>
-      <DelayedLoadingAndErrorWrapper
-        loadingMessages={[]}
-        loading={loading}
-        error={error}
-      >
-        <StrategyForm
-          targetId={dashboardId}
-          targetModel="dashboard"
-          targetName={dashboard.name}
-          isInSidebar
-          setIsDirty={setIsStrategyFormDirty}
-          saveStrategy={saveAndCloseSidebar}
-          savedStrategy={savedStrategy}
-          shouldAllowInvalidation
-          shouldShowName={false}
-          onReset={closeSidebar}
-        />
-      </DelayedLoadingAndErrorWrapper>
-      {confirmationModal}
-    </DashboardStrategySidebarBody>
+      <SidesheetSection>
+        <DashboardStrategySidebarBody
+          align="flex-start"
+          spacing="md"
+          aria-labelledby={headingId}
+        >
+          <DelayedLoadingAndErrorWrapper
+            loadingMessages={[]}
+            loading={loading}
+            error={error}
+          >
+            <StrategyForm
+              targetId={dashboardId}
+              targetModel="dashboard"
+              targetName={dashboard.name}
+              isInSidebar
+              setIsDirty={setIsStrategyFormDirty}
+              saveStrategy={saveAndCloseSidebar}
+              savedStrategy={savedStrategy}
+              shouldAllowInvalidation
+              shouldShowName={false}
+              onReset={closeSidebar}
+            />
+          </DelayedLoadingAndErrorWrapper>
+          {confirmationModal}
+        </DashboardStrategySidebarBody>
+      </SidesheetSection>
+    </SidesheetSubPage>
   );
 };
 
 export const DashboardStrategySidebar = withRouter(
   DashboardStrategySidebar_Base,
-);
-
-const BackButton = ({ onClick }: { onClick: () => void }) => (
-  <Button
-    lh={0}
-    style={{ marginInlineStart: "1rem" }}
-    variant="subtle"
-    onClick={onClick}
-  >
-    <Icon name="chevronleft" color={color("text-dark")} />
-  </Button>
 );

@@ -13,6 +13,7 @@ export const SIDEBAR_NAME: Record<DashboardSidebarName, DashboardSidebarName> =
     action: "action",
     clickBehavior: "clickBehavior",
     editParameter: "editParameter",
+    settings: "settings",
     sharing: "sharing",
     info: "info",
   };

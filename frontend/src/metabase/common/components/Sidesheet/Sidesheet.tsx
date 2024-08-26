@@ -1,7 +1,15 @@
+import cx from "classnames";
 import type React from "react";
+import { useState } from "react";
 import { t } from "ttag";
 
-import { Modal, Stack } from "metabase/ui";
+import {
+  Modal,
+  Stack,
+  type StackProps,
+  Title,
+  type TitleProps,
+} from "metabase/ui";
 
 import Styles from "./sidesheet.module.css";
 
@@ -34,6 +42,8 @@ export function Sidesheet({
   children,
   removeBodyPadding,
 }: SidesheetProps) {
+  const [isStackScrolled, setIsStackScrolled] = useState(false);
+
   return (
     <Modal.Root opened={!!isOpen} onClose={onClose} h="100dvh">
       <Modal.Overlay aria-label={t`modal overlay`} />
@@ -44,24 +54,27 @@ export function Sidesheet({
         bg="bg-light"
         className={Styles.SidesheetContent}
       >
-        <Modal.Header bg="bg-light" px="xl">
-          {title && (
-            <Modal.Title py="md" pr="sm">
-              {title}
-            </Modal.Title>
-          )}
-          <Modal.CloseButton aria-label={t`close`} />
-        </Modal.Header>
-        <Modal.Body
-          data-testid="sidesheet"
-          p={0}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            flex: "1 1 auto",
-            overflow: "hidden",
-          }}
+        <Modal.Header
+          bg="bg-light"
+          pt="md"
+          className={cx(Styles.ModalHeader, {
+            [Styles.ModalHeaderWhenStackIsScrolled]: isStackScrolled,
+          })}
         >
+          {
+            // FIXME: If there's no title, will the close button move to the left?
+            title && (
+              <Modal.Title py="md" pr="sm">
+                {title}
+              </Modal.Title>
+            )
+          }
+          <Modal.CloseButton
+            c="var(--mb-color-text-black)"
+            aria-label={t`Close`}
+          />
+        </Modal.Header>
+        <Modal.Body data-testid="sidesheet" p={0} className={Styles.ModalBody}>
           <Stack
             spacing="lg"
             px={removeBodyPadding ? 0 : "xl"}
@@ -69,6 +82,11 @@ export function Sidesheet({
             mt={title ? "none" : "md"}
             h="100%"
             className={Styles.OverflowAuto}
+            onScroll={e => {
+              setIsStackScrolled(
+                !!e.target && (e.target as HTMLElement).scrollTop > 0,
+              );
+            }}
           >
             {children}
           </Stack>
@@ -77,3 +95,28 @@ export function Sidesheet({
     </Modal.Root>
   );
 }
+
+export const SidesheetSection = ({
+  title,
+  ...props
+}: { title?: React.ReactNode } & StackProps) => (
+  <Stack
+    spacing="sm"
+    {...props}
+    className={cx(props.className, Styles.SidesheetSection)}
+  >
+    {title && <SidesheetSectionTitle>{title}</SidesheetSectionTitle>}
+    {props.children}
+  </Stack>
+);
+
+export const SidesheetSectionTitle = ({
+  children,
+  ...props
+}: {
+  children: React.ReactNode;
+} & TitleProps) => (
+  <Title order={2} c="var(--mb-color-text-light)" fz="md" lh={1} {...props}>
+    {children}
+  </Title>
+);

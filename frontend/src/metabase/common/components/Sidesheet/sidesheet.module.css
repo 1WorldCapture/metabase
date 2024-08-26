@@ -1,5 +1,6 @@
 .SidesheetContent {
   &:not([data-css-specificity-hack="🤷‍♀️"]) {
+    box-shadow: -5px 0 8px 0 rgba(var(--mb-color-bg-black), 0.15);
     position: fixed;
     height: 100vh;
     max-height: 100vh;
@@ -21,4 +22,30 @@
 
 .OverflowAuto {
   overflow: auto;
+}
+
+.ModalHeader {
+  padding-inline-start: 2rem;
+  padding-inline-end: 1.85rem;
+  overflow-y: auto;
+  min-height: 5rem;
+  transition: box-shadow 0.3s ease;
+
+  &.ModalHeaderWhenStackIsScrolled {
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.ModalBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.SidesheetSection {
+  padding: 1.5rem;
+  background-color: var(--mb-color-bg-white);
+  border: 1px solid var(--mb-color-border);
+  border-radius: 0.5rem;
 }
